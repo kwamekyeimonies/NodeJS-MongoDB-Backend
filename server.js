@@ -3,15 +3,19 @@ require('dotenv').config()
 const app = express()
 const PORT = process.env.PORT
 const path = require('path')
-const {logger} = require('./middleware/logger')
+const {logger, logEvents} = require('./middleware/logger')
+const errorHandler = require('./middleware/errorHandler')
+const cookieParser = require('cookie-parser')
+const cors = require('cors')
+const corsOptions = require('./config/corsOptions')
+const connectDB = require('./config/dbConnection')
+const mongoose = require('mongoose')
 
-
+connectDB()
 app.use(logger)
-app.get("/test",(req,res)=>{
-    res.send("Backend API Running")
-})
+app.use(cors(corsOptions))
 app.use(express.json())
-
+app.use(cookieParser())
 app.use(
     "/",
     express.static(path.join(__dirname,'/public'))
@@ -34,10 +38,21 @@ app.all('*',(req,res)=>{
         res.type('txt').send('404 Not found')
     }
 }) 
+app.get("/test",(req,res)=>{
+    res.send("Backend API Running")
+})
+app.use(errorHandler)
 
-app.listen(
-    PORT,
-    ()=>{
-        console.log(`Server running on http://localhost:${PORT}`)
-    }
-)
+mongoose.connection.once('open',()=>{
+    console.log("Database Connected....")
+    app.listen(
+        PORT,
+        ()=>{
+            console.log(`Server running on http://localhost:${PORT}`)
+        }
+    )
+})
+mongoose.connection.on('error',err =>{
+    console.log(err)
+    logEvents(`${err.no}:${err.code}\t${err.syscall}\t${err.hostname}`,'mongoErrLog.log')
+})
