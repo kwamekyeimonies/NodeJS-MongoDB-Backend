@@ -3,10 +3,14 @@ require('dotenv').config()
 const app = express()
 const PORT = process.env.PORT
 const path = require('path')
+const {logger} = require('./middleware/logger')
 
+
+app.use(logger)
 app.get("/test",(req,res)=>{
     res.send("Backend API Running")
 })
+app.use(express.json())
 
 app.use(
     "/",
