@@ -29,3 +29,5 @@ noteschema.plugin(AutoIncrement,{
     id:'ticketNums',
     start_sq:500
 })
+
+module.exports = mongoose.model("Note",noteschema)
